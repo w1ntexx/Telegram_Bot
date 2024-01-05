@@ -8,7 +8,6 @@ class DataBase:
         self.cursor = None
         self.connect()
 
-
     def connect(self):
         try:
             self.con = sq.connect(self.db_path)
@@ -20,7 +19,7 @@ class DataBase:
     def disconnect(self):
         if self.con:
             self.con.close()
-            self.con, self.cursor = None
+            self.con, self.cursor = None, None
             print(f"Database {self.db_path} disconnect")
 
     def insert(self, table, column: tuple, values: tuple):
@@ -30,8 +29,8 @@ class DataBase:
             request = f"INSERT INTO {table} ({column_str}) VALUES ({places})"
             self.cursor.execute(request, values)
             self.con.commit()
-            self.disconnect()
             print("Inserted successfully")
+            self.disconnect()
         except sq.Error as e:
             print(f"ERROR insert: {e}")
 
@@ -46,11 +45,9 @@ class DataBase:
                 requset += " " + add_request
 
             self.cursor.execute(requset)
-            self.disconnect()
             return self.cursor.fetchall()
         except sq.Error as e:
             print(f"ERROR get: {e}")
-            self.disconnect()
             return None
 
     def delete_columns(self, table):
@@ -68,11 +65,9 @@ class DataBase:
             print("Deleted successfully")
         except sq.Error as e:
             print("ERROR delete table: {e}")
-            
-            
-            
 
-req = '''WHERE phrases_id = (
+
+req = """WHERE phrases_id = (
             SELECT abs(random()) % (SELECT max(phrases_id) + 1 
             FROM phrases) + 1) 
     AND NOT EXISTS (
@@ -81,8 +76,12 @@ req = '''WHERE phrases_id = (
         JOIN users u USING (users_id)
         WHERE h.phrases_id = p.phrases_id
         AND u.users_id = h.users_id
-                    )''' 
-                    
+                    )"""
+
 tg_db = DataBase("telegram.db")
-phrase = tg_db.get("phrases p", ('p.phrases_id, p.text',), add_request=req)
-print(phrase)
+phrase = tg_db.get("phrases p", ("p.phrases_id, p.text",), add_request=req)
+users = tg_db.get("users", ('users_id', 'chat_id',),)
+
+
+for user in users:
+    print(user, phrase)

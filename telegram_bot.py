@@ -24,9 +24,9 @@ async def get_cat(url, headers):
 @dp.message(CommandStart())
 async def start(message: types.Message):
     id = f"{message.chat.id}"
-    # added in base id
     tg_db = DataBase("telegram.db")
     tg_db.insert("users", ("chat_id",), (id,))
+    tg_db.disconnect()
     
     await message.answer("Hello, my command is /cat")
 
