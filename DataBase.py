@@ -30,7 +30,6 @@ class DataBase:
             self.cursor.execute(request, values)
             self.con.commit()
             print("Inserted successfully")
-            self.disconnect()
         except sq.Error as e:
             print(f"ERROR insert: {e}")
 
@@ -54,7 +53,7 @@ class DataBase:
         try:
             self.cursor.execute(f"DELETE FROM {table}")
             self.con.commit()
-            print("Deleted successfully")
+            print("Clear successfully")
         except sq.Error as e:
             print("ERROR delete : {e}")
 
@@ -66,14 +65,8 @@ class DataBase:
         except sq.Error as e:
             print("ERROR delete table: {e}")
 
-
-req = """WHERE phrases_id = (
-            SELECT abs(random()) % (SELECT max(phrases_id) + 1 
-            FROM phrases) + 1) 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM history h
-        JOIN users u USING (users_id)
-        WHERE h.phrases_id = p.phrases_id
-        AND u.users_id = h.users_id
-                    )"""
+    def _reset_all_tables(self, phrases=False):
+        self.delete_columns("users")
+        self.delete_columns("history")
+        if phrases:
+            self.delete_columns("phrases")
