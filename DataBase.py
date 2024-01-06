@@ -65,8 +65,10 @@ class DataBase:
         except sq.Error as e:
             print("ERROR delete table: {e}")
 
-    def _reset_all_tables(self, phrases=False):
-        self.delete_columns("users")
+    def _reset_all_tables(self, phrases=False, users=False):
         self.delete_columns("history")
         if phrases:
             self.delete_columns("phrases")
+        if users:
+            self.delete_columns("users")
+            

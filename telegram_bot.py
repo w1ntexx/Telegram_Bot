@@ -42,7 +42,7 @@ async def send_cat(message: types.Message):
     await bot.send_photo(message.chat.id, photo=cat_url)
 
 
-@dp.message(Command("cute"))
+@dp.message(Command("admin_cute"))
 async def cute_message(message: types.Message):
     cute_db = DataBase("telegram.db")
     req = """WHERE phrases_id = (
@@ -67,10 +67,10 @@ async def cute_message(message: types.Message):
                     "history", ("phrases_id", "users_id"), (phrase[0], user[0]))
 
                 await bot.send_message(chat_id=user[1], text=phrase[1])
-                await send_cat(message)
                 res_break = False
             except Exception as e:
                 print(f"Error sending message")
+                time.sleep(2)
                 continue
     cute_db.disconnect()
 
