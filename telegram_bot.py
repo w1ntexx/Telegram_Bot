@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+import time
 
 from aiohttp import ClientSession
 from aiogram import Bot, Dispatcher, types
@@ -14,6 +14,7 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 tg_db = DataBase("telegram.db")
 
+
 async def get_cat(url, headers):
     async with ClientSession() as session:
         async with session.get(url, headers=headers) as response:
@@ -24,10 +25,10 @@ async def get_cat(url, headers):
 @dp.message(CommandStart())
 async def start(message: types.Message):
     id = f"{message.chat.id}"
-    tg_db = DataBase("telegram.db")
-    tg_db.insert("users", ("chat_id",), (id,))
-    tg_db.disconnect()
-    
+    start_db = DataBase("telegram.db")
+    start_db.insert("users", ("chat_id",), (id,))
+    start_db.disconnect()
+
     await message.answer("Hello, my command is /cat")
 
 
@@ -37,8 +38,10 @@ async def send_cat(message: types.Message):
     await bot.send_photo(message.chat.id, photo=cat_url)
 
 
+@dp.message(Command("cute"))
 async def cute_message(message: types.Message):
-    req = '''WHERE phrases_id = (
+    cute_db = DataBase("telegram.db")
+    req = """WHERE phrases_id = (
             SELECT abs(random()) % (SELECT max(phrases_id) + 1 
             FROM phrases) + 1) 
     AND NOT EXISTS (
@@ -47,17 +50,39 @@ async def cute_message(message: types.Message):
         JOIN users u USING (users_id)
         WHERE h.phrases_id = p.phrases_id
         AND u.users_id = h.users_id
-                    )'''    
-                         
-    users = tg_db.get("users", ('users_id', 'chat_id',),)
+                    )"""
+
+    users = cute_db.get(
+        "users",
+        (
+            "users_id",
+            "chat_id",
+        ),
+    )
     for user in users:
-        phrase = tg_db.get("phrases p", ('p.phrases_id, p.text',), add_request=req)[0]
-        tg_db.insert("history", ("phrases_id", "users_id"), (phrase[0], user[0]))
-        
-        await bot.send_message(chat_id=user[1], text=phrase[1])
-        await send_cat(message)
-    tg_db.disconnect()    
-        
+        res_break = True
+        while res_break:
+            try:
+                phrase = cute_db.get(
+                    "phrases p", ("p.phrases_id, p.text",), add_request=req
+                )[0]
+                cute_db.insert("history", ("phrases_id", "users_id"), (phrase[0], user[0]))
+
+                await bot.send_message(chat_id=user[1], text=phrase[1])
+                await send_cat(message)
+                res_break = False
+            except Exception as e:
+                print(f"Error sending message")
+                continue
+    cute_db.disconnect()
+
+@dp.message(Command("nonstop"))
+async def nonstop_cat(message: types.Message):
+    while True:
+        await cute_message(message)
+        time.sleep(3)
+
+
 async def main():
     logging.basicConfig(level=logging.INFO)
     await dp.start_polling(bot)
@@ -65,4 +90,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
