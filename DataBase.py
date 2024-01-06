@@ -70,4 +70,3 @@ class DataBase:
         self.delete_columns("history")
         if phrases:
             self.delete_columns("phrases")
-
