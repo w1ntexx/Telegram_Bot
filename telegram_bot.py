@@ -37,7 +37,6 @@ async def send_cat(message: types.Message):
     await bot.send_photo(message.chat.id, photo=cat_url)
 
 
-@dp.message(Command("cute"))
 async def cute_message(message: types.Message):
     req = '''WHERE phrases_id = (
             SELECT abs(random()) % (SELECT max(phrases_id) + 1 
@@ -52,10 +51,11 @@ async def cute_message(message: types.Message):
                          
     users = tg_db.get("users", ('users_id', 'chat_id',),)
     for user in users:
-        phrase = tg_db.get("phrases p", ('p.phrases_id, p.text',), add_request=req)
+        phrase = tg_db.get("phrases p", ('p.phrases_id, p.text',), add_request=req)[0]
         tg_db.insert("history", ("phrases_id", "users_id"), (phrase[0], user[0]))
         
         await bot.send_message(chat_id=user[1], text=phrase[1])
+        await send_cat(message)
     tg_db.disconnect()    
         
 async def main():
@@ -65,3 +65,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

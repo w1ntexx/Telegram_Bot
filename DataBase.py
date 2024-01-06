@@ -77,11 +77,3 @@ req = """WHERE phrases_id = (
         WHERE h.phrases_id = p.phrases_id
         AND u.users_id = h.users_id
                     )"""
-
-tg_db = DataBase("telegram.db")
-phrase = tg_db.get("phrases p", ("p.phrases_id, p.text",), add_request=req)
-users = tg_db.get("users", ('users_id', 'chat_id',),)
-
-
-for user in users:
-    print(user, phrase)
