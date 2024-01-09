@@ -74,14 +74,6 @@ async def cute_message(message: types.Message):
                 continue
     cute_db.disconnect()
 
-
-@dp.message(Command("nonstop"))
-async def nonstop_cat(message: types.Message):
-    while True:
-        await cute_message(message)
-        time.sleep(1)
-
-
 async def main():
     logging.basicConfig(level=logging.INFO)
     await dp.start_polling(bot)
